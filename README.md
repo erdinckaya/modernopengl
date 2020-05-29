@@ -11,7 +11,7 @@ You can find detailed explanations in source.
 ## Building
 ModernOpenGL uses `CMake` to build its source files. In order to build we need `OpenGL`, `SDL2`, `glew`, `freetype` and `glm`, since this project is
 using `vcpkg` as a package manager all you need to do is checkout `vcpkg` from github and follow the instructions. It should take your 5 mins with a
-mediacore internet connection. You can find the `vcpkg` link [here](https://github.com/microsoft/vcpkg). Once you are installed `vcpkg`, we have to define vcpkg
+mediocre internet connection. You can find the `vcpkg` link [here](https://github.com/microsoft/vcpkg). Once you are installed `vcpkg`, we have to define vcpkg
 as a tool chain file which can be done like this.
 ```
 -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake ..
@@ -21,12 +21,26 @@ Also we have to give `vcpkg root` path into our `CMakeLists.txt`, since our cmak
 -DVCPKG_ROOT=[vcpkg root]
 ```
 
-On the whole our final build commads like this
+On the whole our final build commands like this
+In Unix
 ```
 git clone https://github.com/erdinckaya/modernopengl && cd modernopengl
 mkdir build && cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake -DVCPKG_ROOT=[vcpkg root] ..
 make
+./ModernOpenGL
+```
+In windows
+```
+git clone https://github.com/erdinckaya/modernopengl
+cd modernopengl
+mkdir build
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake -DVCPKG_ROOT=[vcpkg root] ..
+cmake --build . --target ModernOpenGL
+mkdir resources
+xcopy ..\resources resources\ /s/h/e/k/f/c/i
+.\Debug\ModernOpenGL.exe
 ```
 It is gonna download and install all packages according to your operating system.
 
