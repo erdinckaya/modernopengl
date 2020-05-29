@@ -22,6 +22,8 @@ Also we have to give `vcpkg root` path into our `CMakeLists.txt`, since our cmak
 ```
 
 On the whole our final build commands like this
+
+
 In Unix
 ```
 git clone https://github.com/erdinckaya/modernopengl && cd modernopengl
