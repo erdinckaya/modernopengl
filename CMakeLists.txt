@@ -3,7 +3,7 @@ project(ModernOpenGL)
 
 set(CMAKE_CXX_STANDARD 14)
 
-SET(VCPKG_ROOT "/Users/always/dev/vcpkg")
+#SET(VCPKG_ROOT "/Users/always/dev/vcpkg")
 if (NOT EXISTS ${VCPKG_ROOT})
     MESSAGE(FATAL_ERROR "Cannot proceed without VCPKG_ROOT being defined. Please correct your settings.
 You can get vcpkg from https://github.com/Microsoft/vcpkg")
