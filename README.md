@@ -6,7 +6,7 @@ Project consists of two parts, first part is base part which is responsible from
 responsible from generating data handling user inputs in a different thread, we can consider this thread as a game thread. You can find the basic
 usage of this project inside of `sandbox` folder.
 This project has been tested successfully in `Macos Majove`, `Ubuntu 18.04` and `Windows 10`.
-You can find detailed explanations in source.
+You can find detailed explanations in source code.
 
 ## Building
 ModernOpenGL uses `CMake` to build its source files. In order to build we need `OpenGL`, `SDL2`, `glew`, `freetype` and `glm`, since this project is
@@ -16,7 +16,7 @@ as a tool chain file which can be done like this.
 ```
 -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake ..
 ```
-Also we have to give `vcpkg root` path into our `CMakeLists.txt`, since our cmake file is taking care of installing packages. In CMakeLists.txt you will see this line
+Also we have to give `vcpkg root` path into our `CMakeLists.txt`, since our cmake file is taking care of installing packages.
 ```
 -DVCPKG_ROOT=[vcpkg root]
 ```
