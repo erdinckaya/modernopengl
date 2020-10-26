@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(ModernOpenGL)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -16,6 +16,8 @@ if (WIN32)
             OUTPUT_VARIABLE outVar
     )
 elseif (UNIX)
+    # If it gives error such that not finding these add this line at next to the
+    # vcpkg/ports/sdl/portfile.cmake next to SYSTEM_LIBRARIES dbus-1 glib-2.0 gobject-2.0 gio-2.0 ibus-1.0 z
     execute_process(
             COMMAND bash -c "${VCPKG_ROOT}/vcpkg install opengl glew glm freetype sdl2-image[libjpeg-turbo]"
             OUTPUT_VARIABLE outVar
@@ -50,7 +52,7 @@ set(SOURCE_FILES sandbox/main.cpp
 add_library(${PROJECT_NAME_LIBRARY} ${SOURCE_FILES})
 
 target_link_libraries(${PROJECT_NAME_LIBRARY} GLEW::GLEW glm
-        SDL2::SDL2main SDL2::SDL2-static SDL2::SDL2_image freetype)
+        SDL2::SDL2main SDL2::SDL2-static SDL2::SDL2_image freetype z)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME_LIBRARY})
