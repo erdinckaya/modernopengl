@@ -41,6 +41,7 @@ set(SOURCE_FILES sandbox/main.cpp
         src/components/Camera.cpp src/components/Camera.h
         src/sdl/SDL.cpp src/sdl/SDL.h src/sdl/SDLContext.cpp src/sdl/SDLContext.h
         src/ResourceManager.cpp src/ResourceManager.h src/util/Rect.h src/util/Glyph.h src/util/Font.h
+        src/util/RenderQueue.h
         src/batch/TextureBatch.cpp src/batch/TextureBatch.h
         src/components/Window.cpp src/components/Window.h src/render/Renderer.cpp src/render/Renderer.h
         src/util/Types.h sandbox/Game.cpp sandbox/Game.h src/mesh/TextureMesh.cpp src/mesh/TextureMesh.h

@@ -7,6 +7,7 @@
 #include "Resources.h"
 
 #include <SDL2/SDL.h>
+#include <libsync.h>
 
 void HandleCameraMove(Camera &camera, float deltaTime);
 int main(int argc, char *argv[]) {
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
 
   // Classic render loop.
   // Note that render loop is working in main thread. Since opengl context and
-  // SDL window must be in the same tread in Macos so that it is easy to use render thread
+  // SDL window must be in the same thread in Macos so that it is easy to use render thread
   // in main thread and game thread in another thread.
   auto now = SDL_GetTicks() / 1000.0f;
   auto lastFrame = now;
@@ -47,7 +48,6 @@ int main(int argc, char *argv[]) {
     now = SDL_GetTicks() / 1000.0f;
     auto deltaTime = now - lastFrame;
     lastFrame = now;
-
     // Handles camera move.
     HandleCameraMove(camera, deltaTime);
 
@@ -64,7 +64,6 @@ int main(int argc, char *argv[]) {
           break;
       }
     }
-
     // Render all objects.
     renderer.Draw();
   }

@@ -5,10 +5,12 @@
 
 #include <glm/glm.hpp>
 #include <mutex>
+#include <queue>
 #include "../components/Window.h"
 #include "../sdl/SDLContext.h"
 #include "../batch/BatchInterface.h"
 #include "../util/Types.h"
+#include "../util/RenderQueue.h"
 #include "RenderData.h"
 #include "../components/Camera.h"
 #include "../components/Texture.h"
@@ -31,8 +33,12 @@ class Renderer {
   SDLContext m_context;
   std::unique_ptr<BatchInterface> m_batches[ShaderType::_size()];
 
-  std::vector<RenderData> m_batchData;
-  mutable std::mutex m_dataMutex;
+  //RenderQueue m_BatchQueue;
+  std::mutex mMutex;
+  std::vector<RenderData> mCurrent;
+  std::vector<RenderData> mNext;
+  int sizeQ{0};
+
 };
 
 #endif //MODERNOPENGL__RENDERER_H_

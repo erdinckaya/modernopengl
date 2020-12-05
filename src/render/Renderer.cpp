@@ -76,11 +76,21 @@ void Renderer::CreateBatches() {
   }
 }
 void Renderer::AddBatch(std::vector<RenderData> &&t_batchData) {
-  std::lock_guard<std::mutex> guard(m_dataMutex);
-  m_batchData = std::move(t_batchData);
+    std::lock_guard <std::mutex> guard(mMutex);
+    mNext = t_batchData;
+    sizeQ++;
 }
+
+template<typename Mutex, typename Callback, typename ...Args>
+auto ScopedLock(Mutex& mutex, Callback&& callback, Args&& ...args) {
+    std::lock_guard <Mutex> guard(mutex);
+    return callback(std::forward<Args>(args)...);
+}
+
 void Renderer::Draw() {
-  std::lock_guard<std::mutex> guard(m_dataMutex);
+    ScopedLock(mMutex, [](auto& current, auto& next) {
+        current = next;
+    }, mCurrent, mNext);
 
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -90,7 +100,7 @@ void Renderer::Draw() {
   const auto pvm = projection * view;
 
   for (auto batchType : ShaderType::_values()) {
-    for (auto &data : m_batchData) {
+    for (auto &data : mCurrent) {
       if (batchType == data.batchType) {
         m_batches[data.batchType]->Add(data.textureId, data.vertices, pvm);
       }

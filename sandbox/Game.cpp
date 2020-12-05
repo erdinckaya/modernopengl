@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "Game.h"
 #include "../src/ResourceManager.h"
 #include "../src/mesh/CircleMesh.h"
@@ -8,24 +9,28 @@
 Game::Game(Renderer &t_render) :
     m_renderer(t_render),
     m_quit(false),
-    m_thread([this]() { this->Run(); }) {}
+    m_thread([this]() { return Run();}) {}
 
 
 // Game main thread.
 void Game::Run() {
   // Create our textures.
+  constexpr double kFps = 1.0 / 60.0;
   auto images = CreateImages();
   auto last = SDL_GetTicks();
   while (!m_quit) {
     const auto now = SDL_GetTicks();
     const auto kDiffMs = now - last;
-    const auto kDiffSec = kDiffMs / 1000.0f;
     last = now;
+    const auto kDiffSec = kDiffMs / 1000.0;
+    update(images, kDiffSec);
+  }
+}
 
-    // Bind arrow keys to our ball object as an example of key handling.
+void Game::update(std::array<GameObject, 4> &images, const double dt) {
     auto keyStates = SDL_GetKeyboardState(nullptr);
     const int ballImageIndex = 1;
-    const auto diff = 5.0f * kDiffSec;
+    const auto diff = 5.0 * dt;
     if (keyStates[SDL_SCANCODE_LEFT]) {
       images[ballImageIndex].position += glm::vec3(-diff, 0, 0);
     }
@@ -40,8 +45,8 @@ void Game::Run() {
     }
 
     // Create render data of our objects such as translate, rotation, and scale.
-    // After that you have to create render data which contains shader and vertices of object also texture id as well.
-    // Render data feeds the renderer to render objects with batch rendering.
+// After that you have to create render data which contains shader and vertices of object also texture id as well.
+// Render data feeds the renderer to render objects with batch rendering.
     std::vector<RenderData> dataList;
     for (auto &image : images) {
       auto model = glm::mat4(1.0f);
@@ -81,9 +86,9 @@ void Game::Run() {
     dataList.emplace_back(cMesh.Vertices(), ShaderType::Circle, 0);
 
     // Render text.
-    // In order to render text we need to create every character's mesh. Therefore we have to encapsulate all characters
-    // into a single struct which is TextMesh. Note that since all system is using batch rendering creating same character
-    // meshes does not make any difference in terms of performance except creating dump data by user.
+// In order to render text we need to create every character's mesh. Therefore we have to encapsulate all characters
+// into a single struct which is TextMesh. Note that since all system is using batch rendering creating same character
+// meshes does not make any difference in terms of performance except creating dump data by user.
     auto model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-3.0f, 1.0f, 0.0f));
     auto textMesh = TextMesh()
@@ -94,7 +99,7 @@ void Game::Run() {
         .Build();
 
     // Since texts are like image textures TextMesh generates texture meshes.
-    // Feed renderer with texture meshes.
+// Feed renderer with texture meshes.
     const std::vector<TextureMesh> &charMeshes = textMesh.CharMeshes();
     for (const auto &charMesh : charMeshes) {
       dataList.emplace_back(charMesh.Vertices(), ShaderType::Text, charMesh.TextureId());
@@ -115,8 +120,8 @@ void Game::Run() {
     }
 
     m_renderer.AddBatch(std::move(dataList));
-  }
 }
+
 std::array<GameObject, 4> Game::CreateImages() {
   // Get resources manager instance, not that it is singleton and it cannot be copiable, so that you have to
   // use it with reference.
@@ -149,7 +154,7 @@ std::array<GameObject, 4> Game::CreateImages() {
   return images;
 }
 void Game::Join() {
-  m_thread.join();
+//  m_thread.join();
 }
 void Game::Quit() {
   m_quit = true;

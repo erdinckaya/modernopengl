@@ -9,6 +9,7 @@ in float v_TextureIndex;
 uniform sampler2D textures[16];
 
 //https://stackoverflow.com/questions/46871866/glsl-es1-0-and-passing-texture-unit-indices-to-the-fragment-shader
+// Apply binary search
 vec4 getTexture(float index, vec2 uv) {
     if (index < 0.5) {
        return texture(textures[0], uv);

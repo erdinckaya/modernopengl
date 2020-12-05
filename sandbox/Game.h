@@ -11,16 +11,18 @@ class Game {
 
   void Quit();
   void Join();
-
- private:
-  void Run();
-  static std::array<GameObject, 4> CreateImages();
+    void update(std::array<GameObject, 4> &images, double dt);
+    static std::array<GameObject, 4> CreateImages();
+private:
+    void Run();
   static std::string CreateAlphabet();
 
   Renderer &m_renderer;
 
   std::atomic<bool> m_quit;
   std::thread m_thread;
+
+
 };
 
 #endif //MODERNOPENGL__GAME_H_
