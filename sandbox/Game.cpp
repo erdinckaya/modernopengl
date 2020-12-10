@@ -1,10 +1,13 @@
-#include <unistd.h>
 #include "Game.h"
 #include "../src/ResourceManager.h"
 #include "../src/mesh/CircleMesh.h"
 #include "../src/mesh/RectangleMesh.h"
 #include "../src/mesh/TextMesh.h"
 #include "Resources.h"
+#include <chrono>
+#include <algorithm>
+
+using namespace std::chrono_literals;
 
 Game::Game(Renderer &t_render) :
     m_renderer(t_render),
@@ -12,51 +15,102 @@ Game::Game(Renderer &t_render) :
     m_thread([this]() { return Run();}) {}
 
 
-// Game main thread.
-void Game::Run() {
-  // Create our textures.
-  constexpr double kFps = 1.0 / 60.0;
-  auto images = CreateImages();
-  auto last = SDL_GetTicks();
-  while (!m_quit) {
-    const auto now = SDL_GetTicks();
-    const auto kDiffMs = now - last;
-    last = now;
-    const auto kDiffSec = kDiffMs / 1000.0;
-    update(images, kDiffSec);
-  }
+namespace seb_time {
+    // we use a fixed timestep of 1 / (60 fps) = 16 milliseconds
+    constexpr std::chrono::nanoseconds timestep(16ms);
+    constexpr std::chrono::duration<double> timestepSec(seb_time::timestep);
+    std::chrono::nanoseconds lag(0ns);
 }
 
-void Game::update(std::array<GameObject, 4> &images, const double dt) {
-    auto keyStates = SDL_GetKeyboardState(nullptr);
-    const int ballImageIndex = 1;
-    const auto diff = 5.0 * dt;
-    if (keyStates[SDL_SCANCODE_LEFT]) {
-      images[ballImageIndex].position += glm::vec3(-diff, 0, 0);
-    }
-    if (keyStates[SDL_SCANCODE_RIGHT]) {
-      images[ballImageIndex].position += glm::vec3(diff, 0, 0);
-    }
-    if (keyStates[SDL_SCANCODE_UP]) {
-      images[ballImageIndex].position += glm::vec3(0, diff, 0);
-    }
-    if (keyStates[SDL_SCANCODE_DOWN]) {
-      images[ballImageIndex].position += glm::vec3(0, -diff, 0);
+// Game main thread.
+void Game::Run() {
+
+    using clock = std::chrono::high_resolution_clock;
+    auto images = CreateImages();
+    std::array<std::array<State, 2>, images.size()> states{};
+    for (size_t i = 0; i < images.size(); ++i) {
+        states[i] = images[i].state;
     }
 
+    auto time_start = clock::now();
+
+    while(!m_quit) {
+        auto delta_time = clock::now() - time_start;
+        if (delta_time.count() > 1.5 * seb_time::timestep.count()) {
+            std::cout<< delta_time.count()<<" "<< seb_time::timestep.count()<<std::endl;
+        }
+        time_start = clock::now();
+        seb_time::lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
+
+
+        // update game logic as lag permits
+        while(seb_time::lag >= seb_time::timestep) {
+            seb_time::lag -= seb_time::timestep;
+
+            update(states, seb_time::timestepSec.count()); // update at a fixed rate each time
+        }
+
+        // calculate how close or far we are from the next timestep
+        auto alpha = (double) seb_time::lag.count() / seb_time::timestep.count();
+
+//        alpha *= seb_time::timestepSec.count();
+        State& previous = states[1][0];
+        State& current = states[1][1];
+        auto diff = current.position - previous.position;
+        diff.x *= alpha;
+        diff.y *= alpha;
+        auto ballPos = diff + previous.position;
+
+
+        std::array<std::array<State, 2>, images.size()> renderStates{};
+        for (size_t i = 0; i < states.size(); ++i) {
+            renderStates[i] = states[i];
+        }
+        renderStates[1][1].position = ballPos;
+        render(renderStates, images);
+    }
+}
+
+void Game::update(std::array<std::array<State, 2>, 4> &states, const double dt) {
+    auto keyStates = SDL_GetKeyboardState(nullptr);
+    const int ballImageIndex = 1;
+    const auto diff = 2.0 * dt;
+    states[ballImageIndex][(int)StateType::Previous] = states[ballImageIndex][(int)StateType::Current];
+    if (keyStates[SDL_SCANCODE_LEFT]) {
+        states[ballImageIndex][(int)StateType::Current].position += glm::vec3(-diff, 0, 0);
+    }
+    if (keyStates[SDL_SCANCODE_RIGHT]) {
+        states[ballImageIndex][(int)StateType::Current].position += glm::vec3(diff, 0, 0);
+    }
+    if (keyStates[SDL_SCANCODE_UP]) {
+        states[ballImageIndex][(int)StateType::Current].position += glm::vec3(0, diff, 0);
+    }
+    if (keyStates[SDL_SCANCODE_DOWN]) {
+        states[ballImageIndex][(int)StateType::Current].position += glm::vec3(0, -diff, 0);
+    }
+
+    static float angle = 0;
+    angle += diff;
+    states[ballImageIndex][(int)StateType::Current].position.x = 4 * std::cos(angle);
+}
+
+void Game::render(std::array<std::array<State, 2>, 4> &states, std::array<GameObject, 4> &images) {
     // Create render data of our objects such as translate, rotation, and scale.
 // After that you have to create render data which contains shader and vertices of object also texture id as well.
 // Render data feeds the renderer to render objects with batch rendering.
     std::vector<RenderData> dataList;
-    for (auto &image : images) {
+    size_t i = 0;
+    for (auto &state : states) {
+        auto& currentState = state[(int)StateType::Current];
       auto model = glm::mat4(1.0f);
-      model = glm::translate(model, image.position);
-      model = glm::rotate(model, glm::radians(image.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(image.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(image.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-      model = glm::scale(model, image.scale);
-      image.mesh.SetModel(model);
-      dataList.emplace_back(image.mesh.Vertices(), ShaderType::Texture, image.texture.TextureId());
+      model = glm::translate(model, currentState.position);
+      model = glm::rotate(model, glm::radians(currentState.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(currentState.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(currentState.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::scale(model, currentState.scale);
+      images[i].mesh.SetModel(model);
+      dataList.emplace_back(images[i].mesh.Vertices(), ShaderType::Texture, images[i].texture.TextureId());
+      i++;
     }
 
     // Build basic rectangle mesh
@@ -154,7 +208,7 @@ std::array<GameObject, 4> Game::CreateImages() {
   return images;
 }
 void Game::Join() {
-//  m_thread.join();
+  m_thread.join();
 }
 void Game::Quit() {
   m_quit = true;

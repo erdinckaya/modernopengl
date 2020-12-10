@@ -11,7 +11,8 @@ class Game {
 
   void Quit();
   void Join();
-    void update(std::array<GameObject, 4> &images, double dt);
+    void render(std::array<std::array<State, 2>, 4> &states, std::array<GameObject, 4> &images);
+    void update(std::array<std::array<State, 2>, 4>& states, const double dt);
     static std::array<GameObject, 4> CreateImages();
 private:
     void Run();
